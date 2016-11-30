@@ -111,6 +111,7 @@ my $v3protocols = undef;        # V3 protocol list.
 my $o_authproto = 'md5';        # Auth protocol
 my $o_privproto = 'des';        # Priv protocol
 my $o_privpass  = undef;        # priv password
+my $o_context   = undef;        # Context for snmpv3
 
 # Readable names for counters (M. Berger contrib)
 my @countername = ("in=", "out=", "errors-in=", "errors-out=", "discard-in=", "discard-out=");
@@ -172,7 +173,7 @@ sub p_version { print "check_snmp_int version : $VERSION\n"; }
 
 sub print_usage {
     print
-"Usage: $0 [-v] -H <host> -C <snmp_community> [-2] | (-l login -x passwd [-X pass -L <authp>,<privp>)  [-p <port>] -n <name in desc_oid> [-N -A -i -a -D --down] [-r] [-f[eSyY]] [-k[qBMGu] -g -w<warn levels> -c<crit levels> -d<delta>] [-o <octet_length>] [-t <timeout>] [-s] --label [-V]\n";
+"Usage: $0 [-v] -H <host> -C <snmp_community> [-2] | (-l login -x passwd [-X pass -L <authp>,<privp>] [--context=<context>])  [-p <port>] -n <name in desc_oid> [-N -A -i -a -D --down] [-r] [-f[eSyY]] [-k[qBMGu] -g -w<warn levels> -c<crit levels> -d<delta>] [-o <octet_length>] [-t <timeout>] [-s] --label [-V]\n";
 }
 
 sub isnnum {    # Return true if arg is not a number
@@ -305,6 +306,7 @@ sub check_options {
         'privpass:s'    => \$o_privpass,
         'L:s'           => \$v3protocols,
         'protocols:s'   => \$v3protocols,
+        'context:s'     => \$o_context,
         't:i'           => \$o_timeout,
         'timeout:i'     => \$o_timeout,
         'i'             => \$o_inverse,
@@ -582,7 +584,10 @@ if (defined($o_use_ifname)) {
 if (defined($o_use_ifalias)) {
     $query_table = $alias_table;
 }
-my $resultat = $session->get_table(Baseoid => $query_table);
+my $resultat = $session->get_table(
+    contextName => $o_context,
+    Baseoid => $query_table
+);
 
 if (!defined($resultat)) {
     printf("ERROR: Description table : %s.\n", $session->error);
